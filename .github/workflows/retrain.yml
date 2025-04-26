@@ -1,1 +1,54 @@
-#retrain
+name: Auto Retrain
+
+on:
+  push:
+    paths:
+      - 'data/*.pdf'
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        lfs: true  # ✅ Checkout LFS pointers and initialize LFS
+
+    - name: Install Git LFS
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git-lfs
+        git lfs install
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt
+
+    - name: Train model
+      run: python train.py --max_steps 50 --save_steps 25
+
+    - name: Track model files with LFS
+      run: |
+        git lfs track "*.safetensors"
+        git lfs track "*.pt"
+        git lfs track "*.onnx"
+        git add .gitattributes
+
+    - name: Commit and Push model
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add trained_model/
+        git commit -m "Update model"
+        git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref }}
