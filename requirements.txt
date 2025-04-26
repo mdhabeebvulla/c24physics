@@ -7,3 +7,4 @@ datasets
 numpy<2
 pyarrow>=15.0.2
 
+
