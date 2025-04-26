@@ -15,14 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        lfs: true  # ✅ Checkout LFS pointers and initialize LFS
+        lfs: False  # ✅ Checkout LFS pointers and initialize LFS
 
-    - name: Install Git LFS
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git-lfs
-        git lfs install
-
+  
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -36,12 +31,6 @@ jobs:
     - name: Train model
       run: python train.py --max_steps 50 --save_steps 25
 
-    - name: Track model files with LFS
-      run: |
-        git lfs track "*.safetensors"
-        git lfs track "*.pt"
-        git lfs track "*.onnx"
-        git add .gitattributes
 
     - name: Commit and Push model
       env:
